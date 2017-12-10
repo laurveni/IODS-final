@@ -1,0 +1,7 @@
+---
+title: "README"
+output: html_document
+---
+
+Final assignment for the IODS course.
+My webpage can be found [here](https://laurveni.github.io/IODS-final/).
