@@ -1,37 +1,124 @@
 ---
-title: "Final assignment"
+title: "Final assignment IODS"
 author: "Laura Venieri"
+date: December 10, 2017
+contact:
+  email: "laura.venieri@helsinki.fi"
 output: 
   html_document:
     theme: flatly
     toc: true
     toc_depth: 2
     fig_caption: true
-    fig_width: 6
-    fig_height: 4
+    fig_width: 8
+    fig_height: 6
     code_folding: hide
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Abstract
+
+
+## Research question
+
+## Data
+
+The 'human' dataset originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development indices.
+
+The variable names in the data have been shortened, two new variables have been computed and only part of the original variables was kept.
+
+See the structure of our data set, which now contains 155 obsservations of  8 variables.
+
+```{r}
+human_ <- read.csv(file="human.csv")
+str(human_)
 ```
 
-## R Markdown
+The row names are defined as the names of the countries. The variables are the following:
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+* "sedu_ratio" = Ratio of females/males with at least secondary education
+* "lab_ratio" = Ratio of females/males in the labour force
+* "life_exp" = Life expectancy at birth
+* "exp_edu" = Expected years of schooling 
+* "gni_c" = Gross National Income per capita
+* "mat_mort" = Maternal mortality ratio
+* "ad_birth" = Adolescent birth rate
+* "repr_parl" = Percetange of female representatives in parliament
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+We now visualize an overview of the data and the correlation matrix to get some insight on the relationships between the variables.
 
-```{r cars}
-summary(cars)
+```{r message=FALSE}
+library(GGally)
+library(dplyr)
+library(corrplot)
+# visualize the 'human_' variables
+ggpairs(human_)
+
+# compute the correlation matrix and visualize it with corrplot
+cor(human_) %>% corrplot
 ```
 
-## Including Plots
+We can see, for example, a quite strong positive correlation between life_exp and exp_edu: in countries where the life expectancy is higher people also tend to go to school longer. The strong negative correlation between life_exp and mat_mort is easy to believe: if the maternity mortality ratio is higher then the life expectancy is lower. The correlation matrix also suggests that countries with high maternity mortality ratio have fewer expected years of schooling and low ratio of females vs male with at least secondary education.
 
-You can also embed plots, for example:
+## Methods
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+**First method: Linear regression**
+
+The Gross National Income per capita has quite high correlation with life expectancy at birth and expected years of schooling. We thus fit a regression model with gni_c as the target and life_exp and exp_edu as the explanatory variables. Here is a summary of the model.
+
+```{r message=FALSE}
+#linear regression model
+my_model <- lm(gni_c ~ life_exp + exp_edu, data = human_)
+summary(my_model)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+The p-values of both explanatory variables are very low so they have a statistically significant relation with the Gross National Income per capita. The multiple R-squared of the model is 43.7%, which is 
+
+```{r message=FALSE}
+par(mfrow = c(2,2))
+plot(my_model, which=c(1,2,5))
+```
+
+In the Residuals vs Fitted plot the points are not very scattered so the size of the errors may depend on the explanatory variables. This means that the assumption that the variance is constant might not be reasonable. In the Normal QQ-plot we can observe that there is a quite good fit to the line so the assumption that the errors of the model are normally distributed is reasonable. The Residuals vs Leverage plot shows that there are a few values with higher leverage, so there a few observations may have unusually high impact.
+
+**Second method: K-means**
+
+We now standardize the dataset, scaling the variables to get comparable distances. We display a summary of the Euclidean distances between the observations. 
+
+```{r}
+#scale the variables
+human_s <- scale(human_)
+human_s <- as.data.frame(human_s)
+# euclidean distance matrix
+dist_eu <- dist(human_s)
+# look at the summary of the distances
+summary(dist_eu)
+```
+
+
+To investigate what is the optimal number of clusters, we look at how the total of within cluster sum of squares (WCSS) behaves when the number of clusters changes. We show the plot of the number of clusters and the total WCSS: the optimal number of clusters is that corresponding to a quick drop in the total WCSS. In this case two clusters seem to be optimal.
+
+
+```{r}
+library(ggplot2)
+set.seed(123)
+
+# determine the number of clusters
+k_max <- 10
+# calculate the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(human_s, k)$tot.withinss})
+# visualize the results
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+```
+
+We now run the K-means algorithm with two clusters and visualize the clusters in the same variables.
+
+```{r}
+library(GGally)
+# k-means clustering with 2 clusters
+km <-kmeans(human_s, centers = 2)
+# plot the boston_s dataset with clusters
+pairs(human_s,col = km$cluster)
+```
+
+
+## Conclusions
