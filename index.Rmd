@@ -1,9 +1,7 @@
 ---
-title: "Final assignment IODS"
-author: "Laura Venieri"
+title: "Human development data"
+author: "Laura Venieri, email: laura.venieri@helsinki.fi"
 date: December 10, 2017
-contact:
-  email: "laura.venieri@helsinki.fi"
 output: 
   html_document:
     theme: flatly
@@ -17,16 +15,23 @@ output:
 
 ## Abstract
 
+We analyse data related to the development of a country and investigate the relation between the Gross National Income (GNI) per capita, the life expectancy and the expected years of education. A high GNI per capita corresponds to high life expectancy and a longer education.
 
-## Research question
+## Research questions
+
+What can we say about the relation between the Gross National Income (GNI) per capita of a country and the life expectancy of its people? It seems quite natural to believe that a lower GNI per capita would correspond to a lower life expectancy. 
+
+What about the relation between the GNI per capita and the expected years of education? Also in this case, one expects that people living in countries with low GNI have fewer years of education.
+
+We will investigate weather these relationships are linear and weather we can say something else about them.
 
 ## Data
 
 The 'human' dataset originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development indices.
 
-The variable names in the data have been shortened, two new variables have been computed and only part of the original variables was kept.
+The variable names in the data have been shortened, two new variables have been computed and only part of the original variables was kept. The data wrangling was done in [this script](https://github.com/laurveni/IODS-final/blob/master/data_wrangling_human.R).
 
-See the structure of our data set, which now contains 155 obsservations of  8 variables.
+Let us look at the structure of our data set, which now contains 155 obsservations of  8 variables.
 
 ```{r}
 human_ <- read.csv(file="human.csv")
@@ -57,13 +62,35 @@ ggpairs(human_)
 cor(human_) %>% corrplot
 ```
 
-We can see, for example, a quite strong positive correlation between life_exp and exp_edu: in countries where the life expectancy is higher people also tend to go to school longer. The strong negative correlation between life_exp and mat_mort is easy to believe: if the maternity mortality ratio is higher then the life expectancy is lower. The correlation matrix also suggests that countries with high maternity mortality ratio have fewer expected years of schooling and low ratio of females vs male with at least secondary education.
+As we had predicted, there is a quite strong positive correlation between the GNI per capita (gni_c), the life expectancy (life_exp) and the expected years of education (exp_edu). Let us now dig more into this.
 
 ## Methods
 
+To analyse the data we will use two methods:
+
+* Linear regression
+
+* K-means
+
 **First method: Linear regression**
 
-The Gross National Income per capita has quite high correlation with life expectancy at birth and expected years of schooling. We thus fit a regression model with gni_c as the target and life_exp and exp_edu as the explanatory variables. Here is a summary of the model.
+*Description of the method*
+
+Given a certain number of variables, a regression model assumes that the relationship between the dependent variable y (called target) and the explanatory variables is linear. Since we will use two explanatory variables, we explain this case and call them x,z. The model takes the form
+
+y= ax+by+e,
+
+where a and b are the coefficients and e is the error term or noise, an unobservable random variable. The goal is to estimate the parameters a and b. The assumptions of the method are the following:
+
+* The errors are normally distributed
+* The errors are not correlated
+* The errors have constant variance
+* The size of a given error does not depend on the explanatory variables.
+
+
+*Fitting a linear regression model to our data*
+
+We now fit a regression model with gni_c as the target and life_exp and exp_edu as the explanatory variables. Here is a summary of the model.
 
 ```{r message=FALSE}
 #linear regression model
@@ -71,7 +98,7 @@ my_model <- lm(gni_c ~ life_exp + exp_edu, data = human_)
 summary(my_model)
 ```
 
-The p-values of both explanatory variables are very low so they have a statistically significant relation with the Gross National Income per capita. The multiple R-squared of the model is 43.7%, which is 
+The p-values of both explanatory variables are very low so they have a statistically significant relation with the Gross National Income per capita. The multiple R-squared of the model is 43.7%, which is quite high.
 
 ```{r message=FALSE}
 par(mfrow = c(2,2))
@@ -81,6 +108,18 @@ plot(my_model, which=c(1,2,5))
 In the Residuals vs Fitted plot the points are not very scattered so the size of the errors may depend on the explanatory variables. This means that the assumption that the variance is constant might not be reasonable. In the Normal QQ-plot we can observe that there is a quite good fit to the line so the assumption that the errors of the model are normally distributed is reasonable. The Residuals vs Leverage plot shows that there are a few values with higher leverage, so there a few observations may have unusually high impact.
 
 **Second method: K-means**
+
+*Description of the method*
+
+K-means is a clustering method that aims to partition the given observations into k clusters in which each observation belongs to the cluster with the nearest mean. One first chooses the number of clusters and picks initial cluster centroids, then the algorithm calculates the distances between the centroids and the observations and assigns the observation to the cluster with the closest centroid. It then calculates the new centroids and repeats the previous steps until the centroids or the clusters do not change.
+
+Using different distances one can obtain different results, here we will use the Euclidean distance. One way to determine the optimal number of clusters is looking at the total within cluster sum of squares, which is the sum over every cluster of the following quantity:
+
+(x_1 - centroid)^2+ ... (x_N - centroid)^2.
+
+Looking at the plot of the number of clusters and the total within cluster sum of squares, the optimal number of clusters is that corresponding to a quick drop in the total WCSS.
+
+*Applying K-means to our data*
 
 We now standardize the dataset, scaling the variables to get comparable distances. We display a summary of the Euclidean distances between the observations. 
 
@@ -95,7 +134,7 @@ summary(dist_eu)
 ```
 
 
-To investigate what is the optimal number of clusters, we look at how the total of within cluster sum of squares (WCSS) behaves when the number of clusters changes. We show the plot of the number of clusters and the total WCSS: the optimal number of clusters is that corresponding to a quick drop in the total WCSS. In this case two clusters seem to be optimal.
+To investigate what is the optimal number of clusters, we look at how the total of within cluster sum of squares (twcss) behaves when the number of clusters changes. Looking at the following plot two clusters seem to be optimal.
 
 
 ```{r}
@@ -120,5 +159,8 @@ km <-kmeans(human_s, centers = 2)
 pairs(human_s,col = km$cluster)
 ```
 
+Some of the clusters seem quite accurate, such as those related to the variable gni_c (divided into low and high Gross National Income per capita). It seems quite clear that a lower Gross National Income per capita corresponds to a lower life expectancy and fewer expected years of education.
 
 ## Conclusions
+
+There is certainly a positive correlation between the GNI per capita and the life expectancy, as well as between the GNI per capita and the expected years of education. We cannot say that it is really linear, since the results obtained with the linear regression model are good but the validation suggests that some assumptions of the method are not reasonable. 
