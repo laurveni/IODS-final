@@ -3,5 +3,5 @@ title: "README"
 output: html_document
 ---
 
-Final assignment for the IODS course.
-My webpage can be found [here](https://laurveni.github.io/IODS-final/).
+This is the final assignment for the MOOC course "Introduction to Open Data Science" (autumn 2017). The datasets used here come from [the United Nations Development Programme](http://hdr.undp.org/en/content/human-development-index-hdi). We perform data wrangling and analyze the data using linear regression and K-means to investigate the relations between Gross National Income per capita of a country, life expectancy of its population and expected years of education. 
+The final report can be found in [my webpage](https://laurveni.github.io/IODS-final/).
