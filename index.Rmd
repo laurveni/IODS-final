@@ -1,7 +1,7 @@
 ---
 title: "Human development data"
 author: "Laura Venieri, email: laura.venieri@helsinki.fi"
-date: December 10, 2017
+date: April 8, 2018
 output: 
   html_document:
     theme: flatly
@@ -23,31 +23,59 @@ What can we say about the relation between the Gross National Income (GNI) per c
 
 What about the relation between the GNI per capita and the expected years of education? Also in this case, one expects that people living in countries with low GNI have fewer years of education.
 
-We will investigate weather these relationships are linear and weather we can say something else about them.
+We will investigate whether these relationships are linear and whether we can say something else about them.
 
 ## Data
 
-The 'human' dataset originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development indices.
+The 'human' dataset originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development and gender inequality indices.
 
-The variable names in the data have been shortened, two new variables have been computed and only part of the original variables was kept. The data wrangling was done in [this script](https://github.com/laurveni/IODS-final/blob/master/data_wrangling_human.R).
+We start with two data sets: [one](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human_development.csv) containing data about human development in various countries, [the other](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/gender_inequality.csv) about gender inequality.
 
-Let us look at the structure of our data set, which now contains 155 obsservations of  8 variables.
+The data wrangling was done in [this script](https://github.com/laurveni/IODS-final/blob/master/data_wrangling_human.R). The two original datasets have the following structure. The 'Human Development' dataset contains 195 observations of 8 variables:
+
+* Human Development Index (HDI) rank
+* Country
+* HDI
+* Life expectancy at Birth
+* Expected Years of Education
+* Mean Years of Education
+* Gross National Income (GNI) per capita
+* GNI per capita rank minus HDI rank
+
+The 'Gender Inequality' dataset contains 195 observations of 10 variables:
+
+* Gender Inequality Index (GII) rank
+* Country
+* GII
+* Maternal Mortality Ratio
+* Adolescent Birth Rate
+* Percent of Female Representation in Parliament
+* Percentage of Female Population with Secondary Education
+* Percentage of Male Population with Secondary Education
+* Female participation in Labour Force
+* Male participation in Labour Force
+
+After shortening the variable names, we computed two new variables: the ratio of Female and Male populations with secondary education and the ratio of labour force participation of females and males. We then joind the two datasets, using country as identifier, into the 'human' dataset, containing now 195 observations of 19 variables. We keep only the following columns:
+
+* country
+* sedu_ratio = Ratio of females/males with at least secondary education
+* lab_ratio = Ratio of females/males in the labour force
+* life_exp = Life expectancy at birth
+* exp_edu = Expected years of schooling 
+* gni_c = Gross National Income per capita
+* mat_mort = Maternal mortality ratio
+* ad_birth = Adolescent birth rate
+* repr_parl = Percetange of female representatives in parliament
+
+We filtered out all rows with missing values (NA) and we deleted the last 7 rows since they do not contain countries but continents or group of countries. Finally, we added the countries as row names and deleted the column "country".
+
+Let us look at the structure of our final data set, which now contains 155 obsservations of  8 variables.
 
 ```{r}
 human_ <- read.csv(file="human.csv")
 str(human_)
 ```
 
-The row names are defined as the names of the countries. The variables are the following:
-
-* "sedu_ratio" = Ratio of females/males with at least secondary education
-* "lab_ratio" = Ratio of females/males in the labour force
-* "life_exp" = Life expectancy at birth
-* "exp_edu" = Expected years of schooling 
-* "gni_c" = Gross National Income per capita
-* "mat_mort" = Maternal mortality ratio
-* "ad_birth" = Adolescent birth rate
-* "repr_parl" = Percetange of female representatives in parliament
 
 We now visualize an overview of the data and the correlation matrix to get some insight on the relationships between the variables.
 
@@ -62,7 +90,9 @@ ggpairs(human_)
 cor(human_) %>% corrplot
 ```
 
-As we had predicted, there is a quite strong positive correlation between the GNI per capita (gni_c), the life expectancy (life_exp) and the expected years of education (exp_edu). Let us now dig more into this.
+We can observe that life expectancy (life_exp) and maternal mortality ratio (mat_mort) are negatively correlated: it is not surprising since women give birth when they are relatively young, so if a high percentage of them dies the life expectancy will be lower. Maternal mortality ratio has also quite strong negative correlation with expected years of education (exp_edu) and ratio of females/males with at least secondary education (sedu_ratio).
+
+Note that there is a strong positive correlation between life expectancy and expected years of education. Moeover, as we had predicted, they both have a quite strong positive correlation with GNI per capita (gni_c). We will now investigate more these relations, analyzing whether they are linear and how we can group our observations into clusters.
 
 ## Methods
 
