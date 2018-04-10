@@ -108,9 +108,9 @@ To analyse the data we will use two methods:
 
 Given a certain number of variables, a regression model assumes that the relationship between the dependent variable y (called target) and the explanatory variables is linear. Since we will use two explanatory variables, we explain this case and call them x,z. The model takes the form
 
-y= ax+by+e,
+y= ax+bz+c+e,
 
-where a and b are the coefficients and e is the error term or noise, an unobservable random variable. The goal is to estimate the parameters a and b. The assumptions of the method are the following:
+where a and b are the coefficients, c is the intercept and e is the error term or noise, an unobservable random variable. The goal is to estimate the parameters a, b and the intercept c. The assumptions of the method are the following:
 
 * The errors are normally distributed
 * The errors are not correlated
@@ -128,14 +128,20 @@ my_model <- lm(gni_c ~ life_exp + exp_edu, data = human_)
 summary(my_model)
 ```
 
-The p-values of both explanatory variables are very low so they have a statistically significant relation with the Gross National Income per capita. The multiple R-squared of the model is 43.7%, which is quite high.
+The p-values of both explanatory variables are very low (much less than 0.05) so they have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. However, the multiple R-squared of the model is 43.7%, which is quite low, and the standard error is pretty high. This means that the model explains little of the variablity so it would not produce precise predictions. 
+
+Let us now look at Residuals vs Fitted, Normal Q-Q and Residuals vs Leverage plots to investigate if the hypotheses of the model are reasonable.
 
 ```{r message=FALSE}
 par(mfrow = c(2,2))
 plot(my_model, which=c(1,2,5))
 ```
 
-In the Residuals vs Fitted plot the points are not very scattered so the size of the errors may depend on the explanatory variables. This means that the assumption that the variance is constant might not be reasonable. In the Normal QQ-plot we can observe that there is a quite good fit to the line so the assumption that the errors of the model are normally distributed is reasonable. The Residuals vs Leverage plot shows that there are a few values with higher leverage, so there a few observations may have unusually high impact.
+The Residuals vs Fitted plot shows the error residuals vs the fitted values. There is not a distinctive pattern in the residuals, even if the points are not very scattered so the size of the errors may depend on the explanatory variables. This means that the assumption that the variance of the errors is constant might not be reasonable. There are also a few outliers (observations 30, 44 and 11), that is points with much bigger residuals than the others. 
+
+In the Normal QQ-plot we can observe that there is a quite good fit to the line so the assumption that the errors of the model are normally distributed is reasonable. The points standing out from the line are again the observations 30, 44 and 11.
+
+The Residuals vs Leverage plot shows that all cases are inside the Cook's distance lines, so there are no observations with unusually high impact.
 
 **Second method: K-means**
 
