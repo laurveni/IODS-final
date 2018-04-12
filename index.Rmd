@@ -98,19 +98,21 @@ Note that there is a strong positive correlation between life expectancy and exp
 
 To analyse the data we will use two methods:
 
-* Linear regression
+* Linear regression to determine whether the relations between GNI per capita, life expectancy and expected years of education are linear;
 
-* K-means
+* K-means to find patterns in the data.
 
 **First method: Linear regression**
 
 *Description of the method*
 
-Given a certain number of variables, a regression model assumes that the relationship between the dependent variable y (called target) and the explanatory variables is linear. Since we will use two explanatory variables, we explain this case and call them x,z. The model takes the form
+Given a certain number of variables, a regression model assumes that the relationship between the dependent variable $y$ (called target) and the explanatory variables is linear. Since we will use two explanatory variables, we explain this case and call them $x,z$. The model takes the form
+$$y= ax+bz+c+e,$$
+where $a$ and $b$ are the coefficients, $c$ is the intercept and $e$ is the error term or noise, an unobservable random variable. The goal is to estimate the parameters $a$, $b$ and $c$. The best model is found by minimizing the prediction errors, called residuals, that are the differences between the actual values $y$ of the target variable and the predicted values $\hat{y}$. In particular, the fitted model is the one minimizing the sum of squared residuals
+$$ \sum_{i=1}^n (y_i-\hat{y}_i)^2, $$
+where $n$ is the number of observations.
 
-y= ax+bz+c+e,
-
-where a and b are the coefficients, c is the intercept and e is the error term or noise, an unobservable random variable. The goal is to estimate the parameters a, b and the intercept c. The assumptions of the method are the following:
+The assumptions of the method, a part from the linearity of the relation between the target and the explanatory variables, are the following:
 
 * The errors are normally distributed
 * The errors are not correlated
@@ -128,9 +130,13 @@ my_model <- lm(gni_c ~ life_exp + exp_edu, data = human_)
 summary(my_model)
 ```
 
-The p-values of both explanatory variables are very low (much less than 0.05) so they have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. However, the multiple R-squared of the model is 43.7%, which is quite low, and the standard error is pretty high. This means that the model explains little of the variablity so it would not produce precise predictions. 
+The p-values of both explanatory variables are very low (much less than $0.05$) so they have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. 
 
-Let us now look at Residuals vs Fitted, Normal Q-Q and Residuals vs Leverage plots to investigate if the hypotheses of the model are reasonable.
+The multiple R-squared of the model is, however, 43.7%, which is quite low. This does not mean that the model is not significant, but it explains little of the variablity so it would not produce precise predictions. Moreover, the standard errors of both estimated coefficients are quite high since they are only roughly 3.5 times less than the coefficients estimates, whereas ideally they should be at least $10$ times less. 
+
+The p-value of the F-test is very small (less than $0.05$) so a model with fewer explanatory variables would not be better.
+
+Let us now look at the diagnostic plots to investigate if the hypotheses of the model are reasonable.
 
 ```{r message=FALSE}
 par(mfrow = c(2,2))
@@ -147,20 +153,28 @@ The Residuals vs Leverage plot shows that all cases are inside the Cook's distan
 
 *Description of the method*
 
-K-means is a clustering method that aims to partition the given observations into k clusters in which each observation belongs to the cluster with the nearest mean. One first chooses the number of clusters and picks initial cluster centroids, then the algorithm calculates the distances between the centroids and the observations and assigns the observation to the cluster with the closest centroid. It then calculates the new centroids and repeats the previous steps until the centroids or the clusters do not change.
+K-means is an unsupervised learning algorithm that aims to partition the given observations into K clusters based on their similarities. Unsupervised means that it only tries to find patterns in the data without making predictions.
 
-Using different distances one can obtain different results, here we will use the Euclidean distance. One way to determine the optimal number of clusters is looking at the total within cluster sum of squares, which is the sum over every cluster of the following quantity:
+One first chooses the number of clusters, then the algorithm picks initial cluster centroids randomly and assigns each observation to the cluster whose centroid is the closest. It then repeats the following steps:
+* calculate the new centroid of each cluster
+* reassign each observation to the closest cluster
+until certain stopping conditions are satisfied, such as the centroids or the clusters do not change or the within cluster variation cannot be reduced any further.
 
-(x_1 - centroid)^2+ ... (x_N - centroid)^2.
+Using different distances one can obtain different results, here we will use the Euclidean distance. There are different ways to determine the optimal number of clusters, one is looking at the total within cluster sum of squares, which is the sum over every cluster of the following quantity:
+$$WCSS=\sum_{i=1}^m |x_i- c|^2,$$
+where $m$ is the number of observations in the cluster and $c$ is the centorid.
 
 Looking at the plot of the number of clusters and the total within cluster sum of squares, the optimal number of clusters is that corresponding to a quick drop in the total WCSS.
 
 *Applying K-means to our data*
 
-We now standardize the dataset, scaling the variables to get comparable distances. We display a summary of the Euclidean distances between the observations. 
+We will apply the K-means algorithm to the columns gni_c, life_exp and exp_edu of our dataset to see if the patterns found with this method correspond to our hypotheses.
+
+We first select the three desired columns and work only with those. We standardize them, scaling the variables to get comparable distances. We display a summary of the Euclidean distances between the observations. 
 
 ```{r}
 #scale the variables
+human_ <- select(human_, one_of(c("gni_c", "life_exp", "exp_edu")))
 human_s <- scale(human_)
 human_s <- as.data.frame(human_s)
 # euclidean distance matrix
@@ -170,7 +184,7 @@ summary(dist_eu)
 ```
 
 
-To investigate what is the optimal number of clusters, we look at how the total of within cluster sum of squares (twcss) behaves when the number of clusters changes. Looking at the following plot two clusters seem to be optimal.
+To investigate what is the optimal number of clusters, we look at how the total of within cluster sum of squares (tWCSS) behaves when the number of clusters changes. Looking at the following plot two clusters seem to be optimal.
 
 
 ```{r}
@@ -180,9 +194,9 @@ set.seed(123)
 # determine the number of clusters
 k_max <- 10
 # calculate the total within sum of squares
-twcss <- sapply(1:k_max, function(k){kmeans(human_s, k)$tot.withinss})
+tWCSS <- sapply(1:k_max, function(k){kmeans(human_s, k)$tot.withinss})
 # visualize the results
-qplot(x = 1:k_max, y = twcss, geom = 'line')
+qplot(x = 1:k_max, y = tWCSS, geom = 'line')
 ```
 
 We now run the K-means algorithm with two clusters and visualize the clusters in the same variables.
@@ -195,8 +209,8 @@ km <-kmeans(human_s, centers = 2)
 pairs(human_s,col = km$cluster)
 ```
 
-Some of the clusters seem quite accurate, such as those related to the variable gni_c (divided into low and high Gross National Income per capita). It seems quite clear that a lower Gross National Income per capita corresponds to a lower life expectancy and fewer expected years of education.
+The groups determined by the algorithm correspond in some way to our hypetheses: those countries with lower GNI per capita have in most cases also lower life expectactancy and expected years of education. There are, however, some exceptions so this trend is not so clear.
 
 ## Conclusions
 
-There is certainly a positive correlation between the GNI per capita and the life expectancy, as well as between the GNI per capita and the expected years of education. We cannot say that it is really linear, since the results obtained with the linear regression model are good but the validation suggests that some assumptions of the method are not reasonable. 
+There is certainly a positive correlation between the Gross National Income per capita and the life expectancy, as well as between the GNI per capita and the expected years of education. Countries with higher GNI tend to have also higher life expectancy and more expected years of education. This is confirmed both by the K-means algorithm and the linear regression model. The results obtained with the linear regression model are, however, not so clear. There is a significant linear relation between the variables but it does not seem to explain enough of the variability. One option for further investigation could be to try to fit a regression model with a higher number of explanatory variables, for example including the maternal mortality ratio and the ratio of females/males with at least secondary education.
