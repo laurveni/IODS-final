@@ -1,7 +1,7 @@
 ---
-title: "Human development data"
+title: "An analysis of human developement: do richer countries have higher life expectancy and expected education?"
 author: "Laura Venieri, email: laura.venieri@helsinki.fi"
-date: April 8, 2018
+date: April 13, 2018
 output: 
   html_document:
     theme: flatly
@@ -15,19 +15,19 @@ output:
 
 ## Abstract
 
-We analyse data related to the development of a country and investigate the relation between the Gross National Income (GNI) per capita, the life expectancy and the expected years of education. A high GNI per capita corresponds to high life expectancy and a longer education.
+We analyse data related to the development of various world countries and investigate the relations between the Gross National Income (GNI) per capita, the life expectancy and the expected years of education. Using linear regression, we can model the GNI as a linear function of life expectancy and expected years of education, but this model explains only roughly 43% of the variability. Using the K-means algorithm, we confirm that countries with high GNI per capita tend to have also high life expectancy and more expected years of education education. 
 
 ## Research questions
 
-What can we say about the relation between the Gross National Income (GNI) per capita of a country and the life expectancy of its people? It seems quite natural to believe that a lower GNI per capita would correspond to a lower life expectancy. 
+What can we say about the relation between the Gross National Income (GNI) per capita of a country and the life expectancy of its population? It seems quite natural to believe that richer countires would have higher life expectancy than poor ones. 
 
-What about the relation between the GNI per capita and the expected years of education? Also in this case, one expects that people living in countries with low GNI have fewer years of education.
+What about the relation between the GNI per capita and the expected years of education? Also in this case, one expects that people living in countries with high GNI have more years of education on avarage.
 
-We will investigate whether these relationships are linear and whether we can say something else about them.
+We will investigate whether we can fit a statistically significant linear model that predicts the GNI of a country based on the life expectancy and expected years of education of its population. We wil also try to find patterns in the data to check wheter they confirm our hypotheses.
 
 ## Data
 
-The 'human' dataset originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development and gender inequality indices.
+We will use the 'human' dataset that originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development and gender inequality indices.
 
 We start with two data sets: [one](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human_development.csv) containing data about human development in various countries, [the other](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/gender_inequality.csv) about gender inequality.
 
@@ -94,7 +94,7 @@ We can observe that life expectancy (life_exp) and maternal mortality ratio (mat
 
 Note that there is a strong positive correlation between life expectancy and expected years of education. Moeover, as we had predicted, they both have a quite strong positive correlation with GNI per capita (gni_c). We will now investigate more these relations, analyzing whether they are linear and how we can group our observations into clusters.
 
-## Methods
+## Methods and Analysis
 
 To analyse the data we will use two methods:
 
@@ -106,18 +106,19 @@ To analyse the data we will use two methods:
 
 *Description of the method*
 
-Given a certain number of variables, a regression model assumes that the relationship between the dependent variable $y$ (called target) and the explanatory variables is linear. Since we will use two explanatory variables, we explain this case and call them $x,z$. The model takes the form
-$$y= ax+bz+c+e,$$
-where $a$ and $b$ are the coefficients, $c$ is the intercept and $e$ is the error term or noise, an unobservable random variable. The goal is to estimate the parameters $a$, $b$ and $c$. The best model is found by minimizing the prediction errors, called residuals, that are the differences between the actual values $y$ of the target variable and the predicted values $\hat{y}$. In particular, the fitted model is the one minimizing the sum of squared residuals
-$$ \sum_{i=1}^n (y_i-\hat{y}_i)^2, $$
-where $n$ is the number of observations.
+Linear regression can help us understand the relationship between a certain variable $y$, called target, and one or more explanatory variables, also called predictors. Since we will use a model with two explanatory variables, we explain this case and call them $x,z$. The model takes the form
+$$y_i= ax_i+bz_i+c+\epsilon_i, \quad  i=1, \dots, n,$$
+where $n$ is the number of observations in the dataset.
+The parameters $a$ and $b$ are the coefficients, $c$ is the intercept, which is the predicted value when $x=z=0$ and $\epsilon_i$ are the error terms, which are assumed to be unobservable random variables. The goal is to estimate the parameters $a$, $b$ and $c$. The best model is found by minimizing the prediction errors, called residuals, that are the differences between the actual values $y$ of the target variable and the predicted values $\hat{y}$. In particular, the fitted model is the one minimizing the sum of squared residuals
+$$ \sum_{i=1}^n (y_i-\hat{y}_i)^2. $$
+
 
 The assumptions of the method, a part from the linearity of the relation between the target and the explanatory variables, are the following:
 
-* The errors are normally distributed
-* The errors are not correlated
-* The errors have constant variance
-* The size of a given error does not depend on the explanatory variables.
+* the errors are normally distributed;
+* the errors are not correlated;
+* the errors have constant variance;
+* the size of a given error does not depend on the explanatory variables.
 
 
 *Fitting a linear regression model to our data*
@@ -130,13 +131,13 @@ my_model <- lm(gni_c ~ life_exp + exp_edu, data = human_)
 summary(my_model)
 ```
 
-The p-values of both explanatory variables are very low (much less than $0.05$) so they have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. 
+The p-values of both explanatory variables are very low (roughly $0.0006$) so they have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. 
 
 The multiple R-squared of the model is, however, 43.7%, which is quite low. This does not mean that the model is not significant, but it explains little of the variablity so it would not produce precise predictions. Moreover, the standard errors of both estimated coefficients are quite high since they are only roughly 3.5 times less than the coefficients estimates, whereas ideally they should be at least $10$ times less. 
 
-The p-value of the F-test is very small (less than $0.05$) so a model with fewer explanatory variables would not be better.
+The p-value of the F-test is very small (less than $0.00001$) so a model with fewer explanatory variables would not be better.
 
-Let us now look at the diagnostic plots to investigate if the hypotheses of the model are reasonable.
+Let us now look at the diagnostic plots to investigate if the assumptions of the model are reasonable.
 
 ```{r message=FALSE}
 par(mfrow = c(2,2))
