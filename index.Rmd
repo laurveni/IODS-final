@@ -1,7 +1,7 @@
 ---
-title: "An analysis of human developement: do richer countries have higher life expectancy and expected education?"
+title: "An analysis of human developement data: do richer countries have higher life expectancy and expected education?"
 author: "Laura Venieri, email: laura.venieri@helsinki.fi"
-date: April 13, 2018
+date: April 17, 2018
 output: 
   html_document:
     theme: flatly
@@ -15,61 +15,59 @@ output:
 
 ## Abstract
 
-We analyse data related to the development of various world countries and investigate the relations between the Gross National Income (GNI) per capita, the life expectancy and the expected years of education. Using linear regression, we can model the GNI as a linear function of life expectancy and expected years of education, but this model explains only roughly 43% of the variability. Using the K-means algorithm, we confirm that countries with high GNI per capita tend to have also high life expectancy and more expected years of education education. 
+We analyse data related to the development of various world countries and investigate the relations between Gross National Income (GNI) per capita, life expectancy and expected years of education. Using linear regression, we can model the GNI as a linear function of life expectancy and expected years of education, but this model explains only roughly 43% of the variability. Using the K-means algorithm, we confirm that countries with high GNI per capita tend to have also high life expectancy and more expected years of education. 
 
 ## Research questions
 
 What can we say about the relation between the Gross National Income (GNI) per capita of a country and the life expectancy of its population? It seems quite natural to believe that richer countires would have higher life expectancy than poor ones. 
 
-What about the relation between the GNI per capita and the expected years of education? Also in this case, one expects that people living in countries with high GNI have more years of education on avarage.
+What about the relation between GNI per capita and expected years of education? Also in this case, one expects that people living in countries with high GNI have more years of education on avarage.
 
-We will investigate whether we can fit a statistically significant linear model that predicts the GNI of a country based on the life expectancy and expected years of education of its population. We wil also try to find patterns in the data to check wheter they confirm our hypotheses.
+We will investigate whether we can fit a statistically significant linear model that predicts the GNI of a country based on the life expectancy and expected years of education of its population. We will also try to find patterns in the data to check whether they confirm our hypotheses.
 
 ## Data
 
-We will use the 'human' dataset that originates from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development and gender inequality indices.
+We will combine two datasets that originate from the United Nations Development Programme. For more information see [their data page](http://hdr.undp.org/en/content/human-development-index-hdi) and the [technical notes](http://hdr.undp.org/sites/default/files/hdr2015_technical_notes.pdf) about calculating the human development and gender inequality indices.
 
-We start with two data sets: [one](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human_development.csv) containing data about human development in various countries, [the other](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/gender_inequality.csv) about gender inequality.
+[One](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human_development.csv) of the datasets contains data about human development in various countries, [the other](http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/gender_inequality.csv) about gender inequality. They have the following structure. The 'Human Development' dataset contains 195 observations of 8 variables:
 
-The data wrangling was done in [this script](https://github.com/laurveni/IODS-final/blob/master/data_wrangling_human.R). The two original datasets have the following structure. The 'Human Development' dataset contains 195 observations of 8 variables:
-
-* Human Development Index (HDI) rank
-* Country
-* HDI
-* Life expectancy at Birth
-* Expected Years of Education
-* Mean Years of Education
-* Gross National Income (GNI) per capita
-* GNI per capita rank minus HDI rank
+* Human Development Index (HDI) rank;
+* Country;
+* HDI;
+* Life expectancy at birth;
+* Expected years of education;
+* Mean years of education;
+* Gross National Income (GNI) per capita;
+* GNI per capita rank minus HDI rank.
 
 The 'Gender Inequality' dataset contains 195 observations of 10 variables:
 
-* Gender Inequality Index (GII) rank
-* Country
-* GII
-* Maternal Mortality Ratio
-* Adolescent Birth Rate
-* Percent of Female Representation in Parliament
-* Percentage of Female Population with Secondary Education
-* Percentage of Male Population with Secondary Education
-* Female participation in Labour Force
-* Male participation in Labour Force
+* Gender Inequality Index (GII) rank;
+* Country;
+* GII;
+* Maternal mortality ratio;
+* Adolescent birth rate;
+* Percentage of female representation in Parliament;
+* Percentage of female population with secondary education;
+* Percentage of male population with secondary education;
+* Female participation in labour force;
+* Male participation in labour force.
 
-After shortening the variable names, we computed two new variables: the ratio of Female and Male populations with secondary education and the ratio of labour force participation of females and males. We then joind the two datasets, using country as identifier, into the 'human' dataset, containing now 195 observations of 19 variables. We keep only the following columns:
+The data wrangling was done in [this script](https://github.com/laurveni/IODS-final/blob/master/data_wrangling_human.R). After shortening the variable names, we computed two new variables: the ratio of female and male population with secondary education and the ratio of labour force participation of females and males. We then joined the two datasets, using country as identifier, into the 'human' dataset, containing now 195 observations of 19 variables. We then kept only the following columns:
 
-* country
-* sedu_ratio = Ratio of females/males with at least secondary education
-* lab_ratio = Ratio of females/males in the labour force
-* life_exp = Life expectancy at birth
-* exp_edu = Expected years of schooling 
-* gni_c = Gross National Income per capita
-* mat_mort = Maternal mortality ratio
-* ad_birth = Adolescent birth rate
-* repr_parl = Percetange of female representatives in parliament
+* country;
+* sedu_ratio = Ratio of females/males with at least secondary education;
+* lab_ratio = Ratio of females/males in the labour force;
+* life_exp = Life expectancy at birth;
+* exp_edu = Expected years of schooling; 
+* gni_c = Gross National Income per capita;
+* mat_mort = Maternal mortality ratio;
+* ad_birth = Adolescent birth rate;
+* repr_parl = Percentage of female representatives in Parliament.
 
-We filtered out all rows with missing values (NA) and we deleted the last 7 rows since they do not contain countries but continents or group of countries. Finally, we added the countries as row names and deleted the column "country".
+We filtered out all rows with missing values (NA) and we deleted the last 7 rows since they did not contain countries but continents or group of countries. Finally, we added the countries as row names and deleted the column "country".
 
-Let us look at the structure of our final data set, which now contains 155 obsservations of  8 variables.
+Let us look at the structure of our final dataset, which now contains 155 obsservations of 8 variables.
 
 ```{r}
 human_ <- read.csv(file="human.csv")
@@ -77,7 +75,7 @@ str(human_)
 ```
 
 
-We now visualize an overview of the data and the correlation matrix to get some insight on the relationships between the variables.
+We now visualize an overview of the data and the correlation matrix to get some insights into the relations between the variables.
 
 ```{r message=FALSE}
 library(GGally)
@@ -90,9 +88,9 @@ ggpairs(human_)
 cor(human_) %>% corrplot
 ```
 
-We can observe that life expectancy (life_exp) and maternal mortality ratio (mat_mort) are negatively correlated: it is not surprising since women give birth when they are relatively young, so if a high percentage of them dies the life expectancy will be lower. Maternal mortality ratio has also quite strong negative correlation with expected years of education (exp_edu) and ratio of females/males with at least secondary education (sedu_ratio).
+We can observe that life expectancy (life_exp) and maternal mortality ratio (mat_mort) are negatively correlated: it is not surprising since women have children when they are relatively young, so if a high percentage of them dies when giving birth the life expectancy will be lower. Maternal mortality ratio has also quite strong negative correlation with expected years of education (exp_edu) and ratio of females/males with at least secondary education (sedu_ratio).
 
-Note that there is a strong positive correlation between life expectancy and expected years of education. Moeover, as we had predicted, they both have a quite strong positive correlation with GNI per capita (gni_c). We will now investigate more these relations, analyzing whether they are linear and how we can group our observations into clusters.
+Note that there is a strong positive correlation between life expectancy and expected years of education. Moreover, as we had expected, they both have a quite strong positive correlation with GNI per capita (gni_c). We will now investigate more these relations, analyzing whether they are linear and how we can group our observations into clusters.
 
 ## Methods and Analysis
 
@@ -146,7 +144,7 @@ plot(my_model, which=c(1,2,5))
 
 The Residuals vs Fitted plot shows the error residuals vs the fitted values. There is not a distinctive pattern in the residuals, even if the points are not very scattered so the size of the errors may depend on the explanatory variables. This means that the assumption that the variance of the errors is constant might not be reasonable. There are also a few outliers (observations 30, 44 and 11), that is points with much bigger residuals than the others. 
 
-In the Normal QQ-plot we can observe that there is a quite good fit to the line so the assumption that the errors of the model are normally distributed is reasonable. The points standing out from the line are again the observations 30, 44 and 11.
+In the Normal QQ-plot we can observe that there is a quite good fit to the line so the assumption that the errors of the model are normally distributed seems reasonable. The points standing out from the line are again the observations 30, 44 and 11.
 
 The Residuals vs Leverage plot shows that all cases are inside the Cook's distance lines, so there are no observations with unusually high impact.
 
@@ -157,8 +155,10 @@ The Residuals vs Leverage plot shows that all cases are inside the Cook's distan
 K-means is an unsupervised learning algorithm that aims to partition the given observations into K clusters based on their similarities. Unsupervised means that it only tries to find patterns in the data without making predictions.
 
 One first chooses the number of clusters, then the algorithm picks initial cluster centroids randomly and assigns each observation to the cluster whose centroid is the closest. It then repeats the following steps:
+
 * calculate the new centroid of each cluster
-* reassign each observation to the closest cluster
+* reassign each observation to the cluster whose centroid is the closest
+
 until certain stopping conditions are satisfied, such as the centroids or the clusters do not change or the within cluster variation cannot be reduced any further.
 
 Using different distances one can obtain different results, here we will use the Euclidean distance. There are different ways to determine the optimal number of clusters, one is looking at the total within cluster sum of squares, which is the sum over every cluster of the following quantity:
@@ -169,13 +169,14 @@ Looking at the plot of the number of clusters and the total within cluster sum o
 
 *Applying K-means to our data*
 
-We will apply the K-means algorithm to the columns gni_c, life_exp and exp_edu of our dataset to see if the patterns found with this method correspond to our hypotheses.
+We will apply the K-means algorithm to the variables gni_c, life_exp and exp_edu of our dataset to see if the patterns found with this method correspond to our hypotheses.
 
 We first select the three desired columns and work only with those. We standardize them, scaling the variables to get comparable distances. We display a summary of the Euclidean distances between the observations. 
 
 ```{r}
-#scale the variables
+#select the columns gni_c, life_exp and exp_edu
 human_ <- select(human_, one_of(c("gni_c", "life_exp", "exp_edu")))
+#scale the variables
 human_s <- scale(human_)
 human_s <- as.data.frame(human_s)
 # euclidean distance matrix
@@ -185,7 +186,7 @@ summary(dist_eu)
 ```
 
 
-To investigate what is the optimal number of clusters, we look at how the total of within cluster sum of squares (tWCSS) behaves when the number of clusters changes. Looking at the following plot two clusters seem to be optimal.
+To investigate what is the optimal number of clusters, we look at how the total within cluster sum of squares (tWCSS) behaves when the number of clusters changes. Looking at the following plot two clusters seem to be optimal.
 
 
 ```{r}
@@ -206,7 +207,7 @@ We now run the K-means algorithm with two clusters and visualize the clusters in
 library(GGally)
 # k-means clustering with 2 clusters
 km <-kmeans(human_s, centers = 2)
-# plot the boston_s dataset with clusters
+# plot the variables with clusters
 pairs(human_s,col = km$cluster)
 ```
 
@@ -214,4 +215,4 @@ The groups determined by the algorithm correspond in some way to our hypetheses:
 
 ## Conclusions
 
-There is certainly a positive correlation between the Gross National Income per capita and the life expectancy, as well as between the GNI per capita and the expected years of education. Countries with higher GNI tend to have also higher life expectancy and more expected years of education. This is confirmed both by the K-means algorithm and the linear regression model. The results obtained with the linear regression model are, however, not so clear. There is a significant linear relation between the variables but it does not seem to explain enough of the variability. One option for further investigation could be to try to fit a regression model with a higher number of explanatory variables, for example including the maternal mortality ratio and the ratio of females/males with at least secondary education.
+There is certainly a positive correlation between Gross National Income per capita and life expectancy, as well as between GNI per capita and expected years of education. Countries with higher GNI tend to have also higher life expectancy and more expected years of education. This is confirmed both by the K-means algorithm and the linear regression model. The results obtained with the linear regression model are, however, not so clear. There is a significant linear relation between the variables but it does not seem to explain enough of the variability. One option for further investigation could be to try to fit a regression model with a higher number of explanatory variables, for example including the maternal mortality ratio and the ratio of females/males with at least secondary education.
