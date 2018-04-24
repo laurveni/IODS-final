@@ -1,5 +1,5 @@
 ---
-title: "An analysis of human developement data: do richer countries have higher life expectancy and expected education?"
+title: "An analysis of human development data: how is the wealth of a country related to the life expectancy and the expected years of schooling of its population?"
 author: "Laura Venieri, email: laura.venieri@helsinki.fi"
 date: April 17, 2018
 output: 
@@ -15,13 +15,13 @@ output:
 
 ## Abstract
 
-We analyse data related to the development of various world countries and investigate the relations between Gross National Income (GNI) per capita, life expectancy and expected years of education. Using linear regression, we can model the GNI as a linear function of life expectancy and expected years of education, but this model explains only roughly 43% of the variability. Using the K-means algorithm, we confirm that countries with high GNI per capita tend to have also high life expectancy and more expected years of education. 
+We analyse data related to the development of various world countries and investigate the relations between Gross National Income (GNI) per capita, life expectancy and expected years of schooling. Using linear regression, we can model the GNI as a linear function of life expectancy and expected years of education, but this model explains only roughly 43% of the variability. Using the K-means algorithm, we confirm that countries with high GNI per capita tend to have also high life expectancy and more expected years of schooling. 
 
 ## Research questions
 
-What can we say about the relation between the Gross National Income (GNI) per capita of a country and the life expectancy of its population? It seems quite natural to believe that richer countires would have higher life expectancy than poor ones. 
+What can we say about the relation between the Gross National Income (GNI) per capita of a country and the life expectancy of its population? It seems quite natural to believe that richer countries would have higher life expectancy than poor ones. 
 
-What about the relation between GNI per capita and expected years of education? Also in this case, one expects that people living in countries with high GNI have more years of education on avarage.
+What about the relation between GNI per capita and expected years of schooling? Also in this case, one expects that people living in countries with high GNI have higher education on average.
 
 We will investigate whether we can fit a statistically significant linear model that predicts the GNI of a country based on the life expectancy and expected years of education of its population. We will also try to find patterns in the data to check whether they confirm our hypotheses.
 
@@ -96,7 +96,7 @@ Note that there is a strong positive correlation between life expectancy and exp
 
 To analyse the data we will use two methods:
 
-* Linear regression to determine whether the relations between GNI per capita, life expectancy and expected years of education are linear;
+* Linear regression to determine whether the relations between GNI per capita, life expectancy and expected years of education are close to linear;
 
 * K-means to find patterns in the data.
 
@@ -111,7 +111,7 @@ The parameters $a$ and $b$ are the coefficients, $c$ is the intercept, which is 
 $$ \sum_{i=1}^n (y_i-\hat{y}_i)^2. $$
 
 
-The assumptions of the method, a part from the linearity of the relation between the target and the explanatory variables, are the following:
+The assumptions of the method, apart from the linearity of the relation between the target and the explanatory variables, are the following:
 
 * the errors are normally distributed;
 * the errors are not correlated;
@@ -129,7 +129,7 @@ my_model <- lm(gni_c ~ life_exp + exp_edu, data = human_)
 summary(my_model)
 ```
 
-The p-values of both explanatory variables are very low (roughly $0.0006$) so they have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. 
+The p-values of both explanatory variables are very low (roughly $0.0005$ and $0.0007$) so both variables have a statistically significant relation with the Gross National Income per capita. We can thus reject the null hypothesis that the coefficients equal zero. 
 
 The multiple R-squared of the model is, however, 43.7%, which is quite low. This does not mean that the model is not significant, but it explains little of the variablity so it would not produce precise predictions. Moreover, the standard errors of both estimated coefficients are quite high since they are only roughly 3.5 times less than the coefficients estimates, whereas ideally they should be at least $10$ times less. 
 
